@@ -23,6 +23,45 @@ both compilers.
 *Both images are rendered headlessly by `make example` and are byte-identical on
 MLton and Poly/ML.*
 
+## Screenshot showcase
+
+A focused gallery of individual widgets and states, each rendered headlessly by
+`make gallery` (see `examples/scenes.sml`). Every PNG below is **byte-identical
+on MLton and Poly/ML** and pinned by a golden pixel-checksum test in
+`test/test_gallery.sml`, so the exact bytes shown here can never drift between
+compilers.
+
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <img src="assets/widget_buttons.png" alt="buttons, checkboxes and radio group" /><br/>
+      <sub>Buttons, checkboxes &amp; a radio group</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="assets/widget_inputs.png" alt="slider and text field" /><br/>
+      <sub>Slider &amp; text field</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="assets/widget_dropdown.png" alt="an open dropdown popup" /><br/>
+      <sub>An open dropdown</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="33%">
+      <img src="assets/widget_tabs.png" alt="a tab strip switched to the second tab" /><br/>
+      <sub>Tab strip (second tab active)</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="assets/widget_menu.png" alt="a menu bar with the file menu open" /><br/>
+      <sub>Menu bar with an open menu</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="assets/widget_scroll.png" alt="a scroll container scrolled partway" /><br/>
+      <sub>Scroll container (clipped &amp; offset)</sub>
+    </td>
+  </tr>
+</table>
+
 ## Widget set
 
 `Label`, `Button`, `Checkbox`, `Radio` group, `Slider`, `TextField`,
@@ -77,6 +116,7 @@ make test        # build + run the suite under MLton
 make test-poly   # build + run the suite under Poly/ML (5.9.1)
 make all-tests   # both, must be byte-identical green
 make example     # render the demo UI to assets/ui.png + assets/ui_modal.png
+make gallery     # render the per-widget showcase to assets/widget_*.png
 ```
 
 ## License

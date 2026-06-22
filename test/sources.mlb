@@ -4,6 +4,7 @@ $(SML_LIB)/basis/basis.mlb
 
 harness.sml
 support.sml
+../examples/scenes.sml
 test_label.sml
 test_button.sml
 test_checkbox.sml
@@ -16,5 +17,6 @@ test_tabs.sml
 test_scroll.sml
 test_menubar.sml
 test_modal.sml
+test_gallery.sml
 entry.sml
 main.sml
