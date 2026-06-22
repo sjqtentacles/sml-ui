@@ -54,4 +54,5 @@ w_button.sml
 w_checkbox.sml
 w_slider.sml
 w_textfield.sml
+w_radio.sml
 ui.sml

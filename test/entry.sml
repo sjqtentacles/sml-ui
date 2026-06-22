@@ -7,6 +7,10 @@ fun main () =
   ; SliderTests.run ()
   ; TextFieldTests.run ()
   ; PanelTests.run ()
+  ; RadioTests.run ()
+  ; DropdownTests.run ()
+  ; TabsTests.run ()
+  ; ScrollTests.run ()
   ; if Harness.run ()
     then OS.Process.exit OS.Process.success
     else OS.Process.exit OS.Process.failure )

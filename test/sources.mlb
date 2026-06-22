@@ -10,5 +10,9 @@ test_checkbox.sml
 test_slider.sml
 test_textfield.sml
 test_panel.sml
+test_radio.sml
+test_dropdown.sml
+test_tabs.sml
+test_scroll.sml
 entry.sml
 main.sml
