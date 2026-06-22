@@ -14,5 +14,7 @@ test_radio.sml
 test_dropdown.sml
 test_tabs.sml
 test_scroll.sml
+test_menubar.sml
+test_modal.sml
 entry.sml
 main.sml

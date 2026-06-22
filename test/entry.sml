@@ -11,6 +11,8 @@ fun main () =
   ; DropdownTests.run ()
   ; TabsTests.run ()
   ; ScrollTests.run ()
+  ; MenuBarTests.run ()
+  ; ModalTests.run ()
   ; if Harness.run ()
     then OS.Process.exit OS.Process.success
     else OS.Process.exit OS.Process.failure )
