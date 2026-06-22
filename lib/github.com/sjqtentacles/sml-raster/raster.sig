@@ -48,6 +48,19 @@ sig
   (* Filled circle (disk). *)
   val fillCircle : image -> { cx : int, cy : int, r : int } -> rgba8 -> image
 
+  (* Midpoint ellipse outline centered at (cx, cy) with radii (rx, ry). *)
+  val ellipse : image -> { cx : int, cy : int, rx : int, ry : int } -> rgba8 -> image
+
+  (* Filled ellipse, bounded exactly by the midpoint ellipse outline. *)
+  val fillEllipse : image -> { cx : int, cy : int, rx : int, ry : int } -> rgba8 -> image
+
+  (* Circular arc centered at (cx, cy) of radius r, drawn over the angular
+     sweep from `startAngle` counter-clockwise to `endAngle` (radians, screen
+     orientation: +x right, +y down).  A sweep of a full turn (>= 2*pi) draws
+     the same pixels as `circle`. *)
+  val arc : image -> { cx : int, cy : int, r : int, startAngle : real, endAngle : real }
+              -> rgba8 -> image
+
   (* Triangle outline (three edges). *)
   val triangle : image -> (int * int) * (int * int) * (int * int) -> rgba8 -> image
 

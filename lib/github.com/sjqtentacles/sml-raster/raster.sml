@@ -160,6 +160,131 @@ struct
        else (loop (0, r, 1 - r); freeze c)
     end
 
+  (* --- ellipses (midpoint) --- *)
+
+  (* Walk the first-quadrant boundary of an ellipse with radii (rx, ry),
+     invoking [f (x, y)] for each boundary point with x, y >= 0.  Standard
+     two-region midpoint ellipse: coordinates and the dx/dy slope trackers are
+     integers; only the decision variables d1/d2 carry the +0.25 fractional
+     term, and they evolve purely by integer increments, so the visited pixel
+     set is identical across compilers. *)
+  fun ellipsePoints (rx, ry) f =
+    if rx < 0 orelse ry < 0 then ()
+    else
+      let
+        val rx2 = rx * rx
+        val ry2 = ry * ry
+        fun region1 (x, y, dx, dy, d1) =
+          if dx >= dy then (x, y, dx, dy)
+          else
+            (f (x, y);
+             if d1 < 0.0 then
+               let val x' = x + 1
+                   val dx' = dx + 2 * ry2
+               in region1 (x', y, dx', dy,
+                           d1 + Real.fromInt dx' + Real.fromInt ry2) end
+             else
+               let val x' = x + 1
+                   val y' = y - 1
+                   val dx' = dx + 2 * ry2
+                   val dy' = dy - 2 * rx2
+               in region1 (x', y', dx', dy',
+                           d1 + Real.fromInt dx' - Real.fromInt dy' + Real.fromInt ry2) end)
+        fun region2 (x, y, dx, dy, d2) =
+          if y < 0 then ()
+          else
+            (f (x, y);
+             if d2 > 0.0 then
+               let val y' = y - 1
+                   val dy' = dy - 2 * rx2
+               in region2 (x, y', dx, dy',
+                           d2 + Real.fromInt rx2 - Real.fromInt dy') end
+             else
+               let val y' = y - 1
+                   val x' = x + 1
+                   val dx' = dx + 2 * ry2
+                   val dy' = dy - 2 * rx2
+               in region2 (x', y', dx', dy',
+                           d2 + Real.fromInt dx' - Real.fromInt dy' + Real.fromInt rx2) end)
+        val dy0 = 2 * rx2 * ry
+        val d1 = Real.fromInt ry2 - Real.fromInt (rx2 * ry) + 0.25 * Real.fromInt rx2
+        val (x1, y1, dx1, dy1) = region1 (0, ry, 0, dy0, d1)
+        val d2 = Real.fromInt ry2 * (Real.fromInt x1 + 0.5) * (Real.fromInt x1 + 0.5)
+                 + Real.fromInt rx2 * Real.fromInt ((y1 - 1) * (y1 - 1))
+                 - Real.fromInt (rx2 * ry2)
+      in
+        region2 (x1, y1, dx1, dy1, d2)
+      end
+
+  fun ellipse img { cx, cy, rx, ry } color =
+    let
+      val c = toCanvas img
+      fun plot (x, y) =
+        (put c (cx + x, cy + y) color; put c (cx - x, cy + y) color;
+         put c (cx + x, cy - y) color; put c (cx - x, cy - y) color)
+    in ellipsePoints (rx, ry) plot; freeze c end
+
+  fun fillEllipse img { cx, cy, rx, ry } color =
+    let
+      val c = toCanvas img
+    in
+      if rx < 0 orelse ry < 0 then freeze c
+      else
+        let
+          (* Rightmost boundary x for each scanline offset y in 0..ry. *)
+          val maxX = Array.array (ry + 1, ~1)
+          fun record (x, y) =
+            if y >= 0 andalso y <= ry andalso x > Array.sub (maxX, y)
+            then Array.update (maxX, y, x) else ()
+          val () = ellipsePoints (rx, ry) record
+          fun spanRow (y, half) =
+            let fun cols i = if i > half then ()
+                             else (put c (cx + i, y) color; put c (cx - i, y) color; cols (i + 1))
+            in cols 0 end
+          fun rows y =
+            if y > ry then ()
+            else
+              let val half = Array.sub (maxX, y)
+              in
+                (if half >= 0 then
+                   (spanRow (cy + y, half);
+                    if y <> 0 then spanRow (cy - y, half) else ())
+                 else ());
+                rows (y + 1)
+              end
+        in rows 0; freeze c end
+    end
+
+  (* --- circular arc --- *)
+
+  (* Reuses the midpoint-circle point set so that a full-turn arc draws the
+     exact same pixels as [circle]; each candidate point is kept only when its
+     angle falls within the requested counter-clockwise sweep. *)
+  fun arc img { cx, cy, r, startAngle, endAngle } color =
+    let
+      val c = toCanvas img
+      val twoPi = 2.0 * Math.pi
+      val span = endAngle - startAngle
+      fun norm x = x - twoPi * Real.realFloor (x / twoPi)
+      fun inArc (px, py) =
+        let val a = Math.atan2 (Real.fromInt (py - cy), Real.fromInt (px - cx))
+        in norm (a - startAngle) <= span end
+      fun plotIf (px, py) = if inArc (px, py) then put c (px, py) color else ()
+      fun plot (x, y) =
+        (plotIf (cx + x, cy + y); plotIf (cx - x, cy + y);
+         plotIf (cx + x, cy - y); plotIf (cx - x, cy - y);
+         plotIf (cx + y, cy + x); plotIf (cx - y, cy + x);
+         plotIf (cx + y, cy - x); plotIf (cx - y, cy - x))
+      fun loop (x, y, d) =
+        if x > y then ()
+        else
+          (plot (x, y);
+           if d < 0 then loop (x + 1, y, d + 2 * x + 3)
+           else loop (x + 1, y - 1, d + 2 * (x - y) + 5))
+    in if r < 0 then freeze c
+       else (loop (0, r, 1 - r); freeze c)
+    end
+
   (* --- polylines --- *)
 
   fun polyline img pts color =
