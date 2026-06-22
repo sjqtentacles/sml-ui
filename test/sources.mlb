@@ -5,5 +5,10 @@ $(SML_LIB)/basis/basis.mlb
 harness.sml
 support.sml
 test_label.sml
+test_button.sml
+test_checkbox.sml
+test_slider.sml
+test_textfield.sml
+test_panel.sml
 entry.sml
 main.sml

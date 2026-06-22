@@ -50,4 +50,8 @@ $(SML_LIB)/basis/basis.mlb
 ui.sig
 ui_prim.sml
 w_label.sml
+w_button.sml
+w_checkbox.sml
+w_slider.sml
+w_textfield.sml
 ui.sml

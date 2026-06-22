@@ -18,6 +18,10 @@ struct
   fun measure (cfg : config) (w : widget) : size =
     case w of
       Label s => WLabel.measure cfg s
+    | Button r => WButton.measure cfg r
+    | Checkbox r => WCheckbox.measure cfg r
+    | Slider r => WSlider.measure cfg r
+    | TextField r => WTextField.measure cfg r
     | Panel { dir, gap, children } =>
         let
           val sizes = map (measure cfg) children
@@ -38,6 +42,10 @@ struct
            (w : widget) : viewout =
     case w of
       Label s => WLabel.view (cfg, st, input, rc) s
+    | Button r => WButton.view (cfg, st, input, rc) r
+    | Checkbox r => WCheckbox.view (cfg, st, input, rc) r
+    | Slider r => WSlider.view (cfg, st, input, rc) r
+    | TextField r => WTextField.view (cfg, st, input, rc) r
     | Panel { dir, gap, children } =>
         let
           val sizes = map (measure cfg) children
@@ -53,10 +61,37 @@ struct
         in go (children, rects, st, [], []) end
     | _ => { cmds = [], events = [], state = st }
 
+  (* Pre-order list of focusable widget ids (currently text fields), used to
+     resolve FocusNext deterministically. *)
+  fun focusables (w : widget) : string list =
+    case w of
+      TextField { id, ... } => [id]
+    | Tabs { pages, ... } => List.concat (map focusables pages)
+    | Scroll { child, ... } => focusables child
+    | Modal { child, ... } => focusables child
+    | Panel { children, ... } => List.concat (map focusables children)
+    | _ => []
+
+  (* Advance focus to the id after the current focus (cycling); if nothing is
+     focused, focus the first; if the focused id is last/unknown, wrap. *)
+  fun advanceFocus (st : state) (ids : string list) : state =
+    case ids of
+      [] => st
+    | first :: _ =>
+        let
+          fun nextAfter (cur, []) = first
+            | nextAfter (cur, x :: rest) =
+                if x = cur then (case rest of y :: _ => y | [] => first)
+                else nextAfter (cur, rest)
+          val target = case focusOf st of SOME f => nextAfter (f, ids) | NONE => first
+        in setFocus st (SOME target) end
+
   fun frame (cfg : config) (st : state) (input : frameinput) (w : widget) =
     let
       val root = rootRect cfg
       val { cmds, events, state } = view (cfg, st, input, root) w
+      val state = if hasFocusNext input then advanceFocus state (focusables w)
+                  else state
       val scene : C.scene = fillRect (root, #bg (#theme cfg)) :: cmds
     in { state = state, events = events, scene = scene } end
 

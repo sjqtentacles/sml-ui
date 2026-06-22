@@ -48,12 +48,29 @@ struct
     checkString name (expected, shot (w, h) st input widget)
 
   (* helpers to build inputs *)
-  fun click (x, y) =
-    { mouse_x = x, mouse_y = y, mouse_down = true,
-      keys = [Ui.Mouse (Ui.Down (x, y)), Ui.Mouse (Ui.Up (x, y))] } : Ui.frameinput
-  fun hover (x, y) =
-    { mouse_x = x, mouse_y = y, mouse_down = false,
-      keys = [Ui.Mouse (Ui.Move (x, y))] } : Ui.frameinput
+  fun click (xi, yi) =
+    let val (x, y) = (real xi, real yi)
+    in { mouse_x = x, mouse_y = y, mouse_down = false,
+         keys = [Ui.Mouse (Ui.Down (x, y)), Ui.Mouse (Ui.Up (x, y))] } : Ui.frameinput end
+  fun press (xi, yi) =
+    let val (x, y) = (real xi, real yi)
+    in { mouse_x = x, mouse_y = y, mouse_down = true,
+         keys = [Ui.Mouse (Ui.Down (x, y))] } : Ui.frameinput end
+  fun hover (xi, yi) =
+    let val (x, y) = (real xi, real yi)
+    in { mouse_x = x, mouse_y = y, mouse_down = false,
+         keys = [Ui.Mouse (Ui.Move (x, y))] } : Ui.frameinput end
+  fun chars cs =
+    { mouse_x = ~1.0, mouse_y = ~1.0, mouse_down = false,
+      keys = map Ui.Char cs } : Ui.frameinput
+  val focusNext =
+    { mouse_x = ~1.0, mouse_y = ~1.0, mouse_down = false,
+      keys = [Ui.FocusNext] } : Ui.frameinput
+
+  (* full render result (state + events + checksum) for stateful flows *)
+  fun frameOf (w, h) st input widget =
+    let val { state, image, events } = Ui.render (config (w, h)) st input widget
+    in { state = state, events = events, digest = digest image } end
 
   fun eventStr ({ id, kind, value } : Ui.event) = id ^ ":" ^ kind ^ "=" ^ value
   fun eventsStr es = String.concatWith ";" (map eventStr es)

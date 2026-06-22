@@ -28,12 +28,22 @@ struct
   val noInput : frameinput =
     { mouse_x = ~1.0, mouse_y = ~1.0, mouse_down = false, keys = [] }
 
-  (* ---- theme ---- *)
+  (* ---- theme ----
+
+     DETERMINISM: every channel is quantized to an exact n/255 byte value via
+     `chan` (rounding done HERE with floor(x + 0.5), never Real.round).  Raw
+     channel values like 0.70 give 0.70*255 = 178.5, a round-half tie whose
+     resolution inside the vendored `Color.pack` differs between MLton's and
+     Poly/ML's float multiply - so every color the toolkit emits is snapped to a
+     byte fraction first, keeping packed pixels byte-identical across compilers. *)
+  fun iround0 (x : real) : int = Real.floor (x + 0.5)
+  fun chan (v : real) : real = real (iround0 (v * 255.0)) / 255.0
   type theme = { bg : color, fg : color, accent : color, pad : real, scale : int }
-  fun gray v : color = { r = v, g = v, b = v, a = 1.0 }
+  fun rgba (r, g, b, a) : color = { r = chan r, g = chan g, b = chan b, a = a }
+  fun gray v : color = let val c = chan v in { r = c, g = c, b = c, a = 1.0 } end
   val defaultTheme : theme =
     { bg = gray 0.92, fg = gray 0.13
-    , accent = { r = 0.20, g = 0.50, b = 0.86, a = 1.0 }
+    , accent = rgba (0.20, 0.50, 0.86, 1.0)
     , pad = 8.0, scale = 2 }
 
   (* ---- widget tree (concrete here; replicated into the sealed Ui) ---- *)
@@ -88,7 +98,8 @@ struct
 
   (* ---- deterministic numeric helpers ---- *)
   fun iround (x : real) : int = Real.floor (x + 0.5)
-  fun clampr (lo, hi) x = if x < lo then lo else if x > hi then hi else x
+  fun clampr (lo : real, hi : real) (x : real) =
+    if x < lo then lo else if x > hi then hi else x
   fun fmtReal r =
     let val s = Real.fmt (StringCvt.FIX (SOME 2)) r
     in if String.isPrefix "~" s then "-" ^ String.extract (s, 1, NONE) else s end
@@ -103,18 +114,28 @@ struct
 
   (* ---- color shades ---- *)
   fun darken k ({ r, g, b, a } : color) : color =
-    { r = r * k, g = g * k, b = b * k, a = a }
+    { r = chan (r * k), g = chan (g * k), b = chan (b * k), a = a }
   fun lighten k ({ r, g, b, a } : color) : color =
-    { r = r + (1.0 - r) * k, g = g + (1.0 - g) * k, b = b + (1.0 - b) * k, a = a }
+    { r = chan (r + (1.0 - r) * k), g = chan (g + (1.0 - g) * k)
+    , b = chan (b + (1.0 - b) * k), a = a }
 
-  (* ---- drawing primitives -> Canvas2d.cmd list ---- *)
-  fun fillRect (rc : rect, col) = C.FillRect (rc, col)
+  (* ---- drawing primitives -> Canvas2d.cmd list ----
+
+     DETERMINISM: every coordinate handed to canvas2d is SNAPPED to an integer
+     with `sn` = floor(x + 0.5).  Half-pixel coordinates would otherwise reach a
+     round-half-to-even tie inside the rasterizer that diverges between MLton and
+     Poly/ML; snapping here guarantees the backend only ever sees whole numbers,
+     so every golden frame is byte-identical across compilers. *)
+  fun sn (x : real) : real = real (iround x)
+  fun fillRect ({ x, y, w, h } : rect, col) =
+    C.FillRect ({ x = sn x, y = sn y, w = sn w, h = sn h }, col)
   fun strokeRect ({ x, y, w, h } : rect, col, lw) =
-    C.Stroke { path = [ C.MoveTo (x, y), C.LineTo (x + w, y)
-                      , C.LineTo (x + w, y + h), C.LineTo (x, y + h), C.Close ]
-             , color = col, width = lw }
+    let val x0 = sn x and y0 = sn y and x1 = sn (x + w) and y1 = sn (y + h)
+    in C.Stroke { path = [ C.MoveTo (x0, y0), C.LineTo (x1, y0)
+                         , C.LineTo (x1, y1), C.LineTo (x0, y1), C.Close ]
+                , color = col, width = lw } end
   fun text (x, y, s, col, sc) =
-    C.Text { x = x, y = y, text = s, color = col, scale = sc }
+    C.Text { x = sn x, y = sn y, text = s, color = col, scale = sc }
 
   (* Draw `s` vertically centered inside `rc`, left edge at rc.x + lpad. *)
   fun textIn (cfg, rc : rect, lpad, s, col) =
