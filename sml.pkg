@@ -1,0 +1,16 @@
+package github.com/sjqtentacles/sml-ui
+
+require {
+  github.com/sjqtentacles/sml-color
+  github.com/sjqtentacles/sml-inflate
+  github.com/sjqtentacles/sml-image
+  github.com/sjqtentacles/sml-raster
+  github.com/sjqtentacles/sml-pretty
+  github.com/sjqtentacles/sml-svg
+  github.com/sjqtentacles/sml-canvas2d
+  github.com/sjqtentacles/sml-font
+  github.com/sjqtentacles/sml-unicode
+  github.com/sjqtentacles/sml-text-layout
+  github.com/sjqtentacles/sml-layout
+  github.com/sjqtentacles/sml-signal
+}

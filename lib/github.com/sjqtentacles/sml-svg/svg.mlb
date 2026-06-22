@@ -1,0 +1,7 @@
+(* MLB for the vendored sml-svg library: the vendored sml-pretty printer plus
+ * the SVG sources, wired for the sibling-vendored layout used by sml-canvas2d.
+ * Brought in WITHOUT a `local` wrapper so consumers can `open Svg`/`Pretty`. *)
+$(SML_LIB)/basis/basis.mlb
+../sml-pretty/sources.mlb
+svg.sig
+svg.sml

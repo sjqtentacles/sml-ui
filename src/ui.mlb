@@ -1,0 +1,53 @@
+(* sml-ui: public library basis.
+ *
+ * The whole vendored dependency diamond is listed FLAT here - every source
+ * file exactly once, in dependency order - rather than via nested per-library
+ * basis includes.  This is deliberate: the image/raster/color/inflate sources
+ * are reached both through the canvas2d chain AND through the font chain, and
+ * every vendored structure is opaquely ascribed.  A flat single listing makes
+ * each opaque structure elaborate exactly once under both MLton (dedupes by
+ * path) AND the tools/polybuild Poly expander (which does not dedupe), so the
+ * Image.image type is one and the same everywhere. *)
+
+$(SML_LIB)/basis/basis.mlb
+
+(* ---- shared graphics base ---- *)
+  ../lib/github.com/sjqtentacles/sml-color/color.sig
+  ../lib/github.com/sjqtentacles/sml-color/color.sml
+  ../lib/github.com/sjqtentacles/sml-inflate/inflate.sig
+  ../lib/github.com/sjqtentacles/sml-inflate/inflate.sml
+  ../lib/github.com/sjqtentacles/sml-image/image.sig
+  ../lib/github.com/sjqtentacles/sml-image/image.sml
+  ../lib/github.com/sjqtentacles/sml-raster/raster.sig
+  ../lib/github.com/sjqtentacles/sml-raster/raster.sml
+
+  (* ---- svg backend chain (used by canvas2d) ---- *)
+  ../lib/github.com/sjqtentacles/sml-pretty/pretty.sig
+  ../lib/github.com/sjqtentacles/sml-pretty/pretty.sml
+  ../lib/github.com/sjqtentacles/sml-svg/svg.sig
+  ../lib/github.com/sjqtentacles/sml-svg/svg.sml
+
+  (* ---- 2D drawing-command model ---- *)
+  ../lib/github.com/sjqtentacles/sml-canvas2d/canvas2d.sig
+  ../lib/github.com/sjqtentacles/sml-canvas2d/canvas2d.sml
+
+  (* ---- bitmap font + unicode + text layout ---- *)
+  ../lib/github.com/sjqtentacles/sml-font/font.sig
+  ../lib/github.com/sjqtentacles/sml-font/font.sml
+  ../lib/github.com/sjqtentacles/sml-unicode/data.sml
+  ../lib/github.com/sjqtentacles/sml-unicode/unicode.sig
+  ../lib/github.com/sjqtentacles/sml-unicode/unicode.sml
+  ../lib/github.com/sjqtentacles/sml-text-layout/text_layout.sig
+  ../lib/github.com/sjqtentacles/sml-text-layout/text_layout.sml
+
+  (* ---- layout solver + FRP ---- *)
+  ../lib/github.com/sjqtentacles/sml-layout/layout.sig
+  ../lib/github.com/sjqtentacles/sml-layout/layout.sml
+  ../lib/github.com/sjqtentacles/sml-signal/signal.sig
+  ../lib/github.com/sjqtentacles/sml-signal/signal.sml
+
+(* ---- the toolkit ---- *)
+ui.sig
+ui_prim.sml
+w_label.sml
+ui.sml
